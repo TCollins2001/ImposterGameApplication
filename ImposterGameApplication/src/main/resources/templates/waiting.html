@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T.C IMPOSTER GAME | WAITING ROOM</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="transition-div">
+<div class="background-host-container">
+  <a href="/index"><img class="background-waiting" src="/images/background.png"></a>
+</div>
+<div class="waiting-container">
+  <h2 th:if="${code != null}" class="game-code-waiting">
+    Game Code: <span th:text="${code}"></span>
+  </h2>
+  <h3 id="playerCount"></h3>
+
+  <ul id="playerList"></ul>
+
+  <p class="start-text" style="color: white; text-align: center; padding-top: 30px; font-family: 'Luckiest Guy', sans-serif;">Game Starts When All Players Join</p>
+</div>
+<form id="goGenForm" action="/generator" method="get">
+  <input type="hidden" name="code" th:value="${code}">
+  <input type="hidden" name="playerId" th:value="${playerId}">
+</form>
+<script>
+  function checkStatus() {
+    fetch("/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "code=" + [[${code}]]
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "START") {
+        document.getElementById("goGenForm").submit();
+        return;
+      }
+      document.getElementById("playerCount").textContent =
+        `${data.joined} / ${data.max} players joined`;
+
+      const list = document.getElementById("playerList");
+      list.innerHTML = "";
+      list.style.listStyleType = "none";
+      list.style.padding = "0";
+      data.players.forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+
+        li.style.backgroundColor = "#1892a2";
+        li.style.padding = "20px";
+        li.style.marginBottom = "10px";
+        li.style.borderRadius = "10px";
+        li.style.border = "7px solid white";
+        li.style.color = "white";
+        li.style.fontWeight = "bold";
+        li.style.margin = "20px auto";
+        li.style.textAlign = "center";
+        li.style.display = "block";
+
+        li.style.animationDelay = `${Math.random() * 0.8}s`;
+
+        list.appendChild(li);
+      });
+      if (data.full && !document.body.classList.contains("full")) {
+  document.body.classList.add("full");
+  document.querySelector(".start-text").textContent =
+    "All players joined! Starting...";
+}
+    });
+  }
+  checkStatus();
+  setInterval(checkStatus, 500);
+</script>
+  <img id="musicToggle" src="/images/music-off.png" style="position: fixed; bottom: 10px; right: 10px; cursor: pointer; z-index: 9999;">
+  <audio id="bgMusic" src="/audio/so-right-instrumental.mp3" loop></audio>
+  <script src="bg-music.js"></script>
+</div>
+</body>
+</html>
